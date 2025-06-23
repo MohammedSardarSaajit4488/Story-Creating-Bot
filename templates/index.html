@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Creating Bot</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #f16363, #d455f7); /* Generate button, selected state */
+            --background-gradient: linear-gradient(135deg, #f5f3ff, #ede9fe, #fae8ff); /* Previous background */
+            --chat-bubble-user: #7c3aed;
+            --chat-bubble-bot: #f3f4f6;
+            --text-light: #ffffff;
+            --text-dark: #1f2937;
+            --border-color: #e5e7eb;
+            /* Genre-specific colors */
+            --horror-color: linear-gradient(135deg, #dc2626, #7f1d1d); /* Red for Horror */
+            --isekai-color: linear-gradient(135deg, #06b6d4, #0ea5e9); /* Cyan for Isekai */
+            --robots-color: linear-gradient(135deg, #16a34a, #22c55e); /* Green for Robots */
+            /* Character-specific colors */
+            --zira-color: linear-gradient(135deg, #48ec87, #f43f5e); /* Pink for Zira */
+            --abshi-color: linear-gradient(135deg, #8b5cf6, #a855f7); /* Purple for Abshi */
+            --kamini-color: linear-gradient(135deg, #f59e0b, #ea580c); /* Orange for Kamini */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
+            background: var(--background-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            background: white;
+            border-radius: 1rem 1rem 0 0;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bot-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        main {
+            flex: 1;
+            background: white;
+            border-radius: 0 0 1rem 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-area {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            min-height: 500px;
+            max-height: 500px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.25rem;
+        }
+
+        .message.bot .avatar {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .message.user .avatar {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        .message-bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            max-width: 70%;
+            position: relative;
+        }
+
+        .message.bot .message-bubble {
+            background: var(--chat-bubble-bot);
+            color: var(--text-dark);
+            border-top-left-radius: 0;
+        }
+
+        .message.user .message-bubble {
+            background: var(--chat-bubble-user);
+            color: var(--text-light);
+            border-top-right-radius: 0;
+        }
+
+        .input-area {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .selection-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .selection-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 9999px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .selection-btn.horror { background: var(--horror-color); }
+        .selection-btn.isekai { background: var(--isekai-color); }
+        .selection-btn.robots { background: var(--robots-color); }
+        .selection-btn.zira { background: var(--zira-color); }
+        .selection-btn.abshi { background: var(--abshi-color); }
+        .selection-btn.kamini { background: var(--kamini-color); }
+
+        .selection-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .selection-btn:active {
+            transform: scale(0.95);
+        }
+
+        .selection-btn.selected {
+            background: var(--primary-gradient);
+            transform: scale(1.1);
+        }
+
+        #custom-prompt {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: white;
+            font-size: 1rem;
+            color: var(--text-dark);
+            border-radius: 10px;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        #custom-prompt:focus {
+            outline: none;
+            border: 1px solid #6366f1;
+        }
+
+        #custom-prompt::placeholder {
+            color: #9ca3af;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            display: inline-block;
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .thinking {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.5rem 0;
+        }
+
+        .thinking span {
+            width: 0.5rem;
+            height: 0.5rem;
+            background: #6366f1;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .thinking span:nth-child(1) { animation-delay: -0.32s; }
+        .thinking span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .sending svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <div class="header-content">
+                <div class="bot-icon">🤖</div>
+                <h1>Story Creating Bot</h1>
+            </div>
+        </header>
+        <main>
+            <div class="chat-area" id="chat-area">
+                <div class="message bot">
+                    <div class="avatar">🤖</div>
+                    <div class="message-bubble">
+                        Hello! Use the buttons to pick a genre and characters, or type a custom prompt below to create a story.
+                    </div>
+                </div>
+            </div>
+            <div class="input-area">
+                <div class="input-container">
+                    <div>
+                        <strong>Select Genre (Optional):</strong>
+                        <div class="selection-buttons" id="genre-buttons"></div>
+                    </div>
+                    <div>
+                        <strong>Select Characters (Optional, 1-3):</strong>
+                        <div class="selection-buttons" id="character-buttons"></div>
+                    </div>
+                    <div>
+                        <strong>Or Enter Custom Prompt:</strong>
+                        <textarea id="custom-prompt" placeholder="e.g., 'Write a funny story about Zira and a robot cat.'"></textarea>
+                    </div>
+                    <button onclick="generateStory()" id="send-button" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                        Generate Story
+                    </button>
+                </div>
+            </div>
+        </main>
+        <footer>
+            <p>© 2024 Story Creating Bot. All rights reserved.</p>
+        </footer>
+    </div>
+    <script>
+        const genres = {{ genres|tojson|safe }};
+        const characters = {{ characters|tojson|safe }};
+        let selectedGenre = null;
+        let selectedCharacters = [];
+
+        // Create genre buttons with unique colors
+        const genreContainer = document.getElementById('genre-buttons');
+        genres.forEach(genre => {
+            const btn = document.createElement('button');
+            btn.className = `selection-btn ${genre}`;
+            btn.textContent = genre.charAt(0).toUpperCase() + genre.slice(1);
+            btn.onclick = () => {
+                document.querySelectorAll('#genre-buttons .selection-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedGenre = genre;
+                checkGenerateButton();
+            };
+            genreContainer.appendChild(btn);
+        });
+
+        // Create character buttons with unique colors
+        const characterContainer = document.getElementById('character-buttons');
+        characters.forEach(char => {
+            const btn = document.createElement('button');
+            btn.className = `selection-btn ${char.toLowerCase()}`;
+            btn.textContent = char;
+            btn.onclick = () => {
+                if (selectedCharacters.includes(char)) {
+                    selectedCharacters = selectedCharacters.filter(c => c !== char);
+                    btn.classList.remove('selected');
+                } else if (selectedCharacters.length < 3) {
+                    selectedCharacters.push(char);
+                    btn.classList.add('selected');
+                }
+                checkGenerateButton();
+            };
+            characterContainer.appendChild(btn);
+        });
+
+        // Enable "Generate Story" button if valid input exists
+        function checkGenerateButton() {
+            const sendButton = document.getElementById('send-button');
+            const customPrompt = document.getElementById('custom-prompt').value.trim();
+            sendButton.disabled = !(customPrompt || (selectedGenre && selectedCharacters.length > 0));
+        }
+
+        // Update button state on prompt input
+        document.getElementById('custom-prompt').addEventListener('input', checkGenerateButton);
+
+        function createMessageElement(text, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = isUser ? '👤' : '🤖';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = text;
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(bubble);
+            return messageDiv;
+        }
+
+        function createThinkingIndicator() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.id = 'thinking-indicator';
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = '🤖';
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            const thinking = document.createElement('div');
+            thinking.className = 'thinking';
+            thinking.innerHTML = '<span></span><span></span><span></span>';
+            bubble.appendChild(thinking);
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(bubble);
+            return messageDiv;
+        }
+
+        async function generateStory() {
+            const customPrompt = document.getElementById('custom-prompt').value.trim();
+            const sendButton = document.getElementById('send-button');
+            const chatArea = document.getElementById('chat-area');
+
+            if (!customPrompt && (!selectedGenre || selectedCharacters.length === 0)) {
+                return;
+            }
+
+            sendButton.disabled = true;
+            sendButton.classList.add('sending');
+
+            if (customPrompt) {
+                chatArea.appendChild(createMessageElement(customPrompt, true));
+            }
+
+            chatArea.appendChild(createThinkingIndicator());
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            const payload = customPrompt 
+                ? { custom_prompt: customPrompt, characters: selectedCharacters }
+                : { genre: selectedGenre, characters: selectedCharacters };
+
+            console.log("Sending payload:", payload);
+
+            try {
+                const response = await fetch('/generate_story', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: AbortSignal.timeout(5000)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log("Received response:", data);
+
+                document.getElementById('thinking-indicator').remove();
+
+                setTimeout(() => {
+                    const text = data.response || data.error || "Failed to generate story.";
+                    chatArea.appendChild(createMessageElement(text, false));
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                }, 300);
+            } catch (error) {
+                console.error("Fetch error:", error);
+                document.getElementById('thinking-indicator').remove();
+                setTimeout(() => {
+                    chatArea.appendChild(createMessageElement("Oops, something went wrong! Please try again.", false));
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                }, 300);
+            } finally {
+                sendButton.disabled = false;
+                sendButton.classList.remove('sending');
+                document.getElementById('custom-prompt').value = '';
+                checkGenerateButton();
+            }
+        }
+
+        document.getElementById('custom-prompt').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                generateStory();
+            }
+        });
+    </script>
+</body>
+</html>
